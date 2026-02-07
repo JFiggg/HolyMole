@@ -28,3 +28,25 @@ export async function simulateRush(): Promise<{ status: string; message: string;
   if (!res.ok) throw new Error("Failed to simulate rush");
   return res.json();
 }
+
+export interface BlastRadiusNode {
+  id: string;
+  label: string;
+  type: "ingredient" | "sub_recipe" | "menu_item";
+}
+
+export interface BlastRadiusResponse {
+  ingredient: string;
+  nodes: BlastRadiusNode[];
+  edges: { from: string; to: string }[];
+  affected_menu_items: string[];
+  affected_with_revenue: { menu_item: string; revenue_per_hour: number }[];
+  total_menu_count: number;
+  total_revenue_risk_per_hour: number;
+}
+
+export async function fetchBlastRadius(ingredientName: string): Promise<BlastRadiusResponse> {
+  const res = await fetch(`${API_BASE}/blast-radius/${encodeURIComponent(ingredientName)}`);
+  if (!res.ok) throw new Error("Failed to fetch blast radius");
+  return res.json();
+}

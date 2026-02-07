@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BlastRadiusGraphModal } from "@/components/BlastRadiusGraph";
 import { cn } from "@/lib/utils";
 
 function formatNum(n: number) {
@@ -32,6 +33,10 @@ function getStatusColor(item: Ingredient): string {
     return "bg-yellow-50 hover:bg-yellow-100 border-l-4 border-l-yellow-500";
   }
   return "bg-white hover:bg-slate-50 border-l-4 border-l-green-500";
+}
+
+function isCritical(item: Ingredient): boolean {
+  return item.quantity < item.par_level;
 }
 
 /**
@@ -58,6 +63,8 @@ export default function Home() {
   const [seeding, setSeeding] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blastRadiusIngredient, setBlastRadiusIngredient] = useState<string | null>(null);
+  const [blastRadiusOpen, setBlastRadiusOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -187,10 +194,21 @@ export default function Home() {
             <TableBody>
               {inventory.map((row) => {
                 const doh = formatDaysOnHand(row);
+                const critical = isCritical(row);
                 return (
                   <TableRow
                     key={row.id}
-                    className={cn("border-border", getStatusColor(row))}
+                    className={cn(
+                      "border-border",
+                      getStatusColor(row),
+                      critical && "cursor-pointer"
+                    )}
+                    onClick={() => {
+                      if (critical) {
+                        setBlastRadiusIngredient(row.name);
+                        setBlastRadiusOpen(true);
+                      }
+                    }}
                   >
                     <TableCell className="font-medium">{row.name}</TableCell>
                     <TableCell>{row.category}</TableCell>
@@ -214,6 +232,15 @@ export default function Home() {
           </Table>
         )}
       </section>
+
+      <BlastRadiusGraphModal
+        ingredientName={blastRadiusIngredient}
+        open={blastRadiusOpen}
+        onClose={() => {
+          setBlastRadiusOpen(false);
+          setBlastRadiusIngredient(null);
+        }}
+      />
     </main>
   );
 }

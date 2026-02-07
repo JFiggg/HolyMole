@@ -21,11 +21,57 @@ app.add_middleware(
 
 # ----- Seed data for Tex-Mex ingredients -----
 SEED_INGREDIENTS = [
+    # Produce
     {"name": "Avocados", "category": "Produce", "quantity": 100.0, "unit": "count", "unit_cost": 0.85, "par_level": 50.0, "daily_usage": 30.0},
-    {"name": "Steak", "category": "Protein", "quantity": 40.0, "unit": "lb", "unit_cost": 8.50, "par_level": 25.0, "daily_usage": 15.0},
-    {"name": "Eggs", "category": "Dairy", "quantity": 120.0, "unit": "count", "unit_cost": 0.25, "par_level": 60.0, "daily_usage": 48.0},
     {"name": "Lime", "category": "Produce", "quantity": 80.0, "unit": "count", "unit_cost": 0.20, "par_level": 40.0, "daily_usage": 35.0},
+    {"name": "Cilantro", "category": "Produce", "quantity": 25.0, "unit": "bunch", "unit_cost": 0.75, "par_level": 12.0, "daily_usage": 10.0},
+    {"name": "Onion", "category": "Produce", "quantity": 60.0, "unit": "count", "unit_cost": 0.35, "par_level": 30.0, "daily_usage": 25.0},
+    {"name": "Tomato", "category": "Produce", "quantity": 90.0, "unit": "count", "unit_cost": 0.45, "par_level": 45.0, "daily_usage": 40.0},
+    {"name": "Jalapeño", "category": "Produce", "quantity": 50.0, "unit": "count", "unit_cost": 0.15, "par_level": 25.0, "daily_usage": 20.0},
+    {"name": "Bell Pepper", "category": "Produce", "quantity": 40.0, "unit": "count", "unit_cost": 0.80, "par_level": 20.0, "daily_usage": 15.0},
+    {"name": "Corn", "category": "Produce", "quantity": 24.0, "unit": "ear", "unit_cost": 0.40, "par_level": 12.0, "daily_usage": 10.0},
+    {"name": "Garlic", "category": "Produce", "quantity": 20.0, "unit": "head", "unit_cost": 0.50, "par_level": 10.0, "daily_usage": 8.0},
+    {"name": "Lettuce", "category": "Produce", "quantity": 15.0, "unit": "head", "unit_cost": 1.20, "par_level": 8.0, "daily_usage": 6.0},
+    {"name": "Cabbage", "category": "Produce", "quantity": 12.0, "unit": "head", "unit_cost": 0.90, "par_level": 6.0, "daily_usage": 5.0},
+    {"name": "Cucumber", "category": "Produce", "quantity": 30.0, "unit": "count", "unit_cost": 0.40, "par_level": 15.0, "daily_usage": 12.0},
+    {"name": "Radish", "category": "Produce", "quantity": 20.0, "unit": "bunch", "unit_cost": 0.60, "par_level": 10.0, "daily_usage": 8.0},
+    {"name": "Mango", "category": "Produce", "quantity": 24.0, "unit": "count", "unit_cost": 1.00, "par_level": 12.0, "daily_usage": 10.0},
+    {"name": "Pineapple", "category": "Produce", "quantity": 8.0, "unit": "count", "unit_cost": 2.50, "par_level": 4.0, "daily_usage": 3.0},
+    # Protein
+    {"name": "Steak", "category": "Protein", "quantity": 40.0, "unit": "lb", "unit_cost": 8.50, "par_level": 25.0, "daily_usage": 15.0},
+    {"name": "Chicken", "category": "Protein", "quantity": 50.0, "unit": "lb", "unit_cost": 3.25, "par_level": 30.0, "daily_usage": 22.0},
+    {"name": "Fish", "category": "Protein", "quantity": 25.0, "unit": "lb", "unit_cost": 12.0, "par_level": 15.0, "daily_usage": 10.0},
+    {"name": "Shrimp", "category": "Protein", "quantity": 15.0, "unit": "lb", "unit_cost": 14.0, "par_level": 8.0, "daily_usage": 6.0},
+    {"name": "Chorizo", "category": "Protein", "quantity": 20.0, "unit": "lb", "unit_cost": 5.50, "par_level": 10.0, "daily_usage": 8.0},
+    {"name": "Ground Beef", "category": "Protein", "quantity": 35.0, "unit": "lb", "unit_cost": 4.50, "par_level": 20.0, "daily_usage": 15.0},
+    {"name": "Pork", "category": "Protein", "quantity": 30.0, "unit": "lb", "unit_cost": 3.80, "par_level": 18.0, "daily_usage": 12.0},
+    {"name": "Bacon", "category": "Protein", "quantity": 18.0, "unit": "lb", "unit_cost": 6.00, "par_level": 10.0, "daily_usage": 7.0},
+    # Dairy
+    {"name": "Eggs", "category": "Dairy", "quantity": 120.0, "unit": "count", "unit_cost": 0.25, "par_level": 60.0, "daily_usage": 48.0},
+    {"name": "Cheese", "category": "Dairy", "quantity": 25.0, "unit": "lb", "unit_cost": 4.50, "par_level": 15.0, "daily_usage": 12.0},
+    {"name": "Crema", "category": "Dairy", "quantity": 12.0, "unit": "quart", "unit_cost": 3.50, "par_level": 6.0, "daily_usage": 5.0},
+    {"name": "Butter", "category": "Dairy", "quantity": 10.0, "unit": "lb", "unit_cost": 4.00, "par_level": 6.0, "daily_usage": 4.0},
+    # Pantry / Bread
+    {"name": "Tortilla", "category": "Pantry", "quantity": 200.0, "unit": "count", "unit_cost": 0.08, "par_level": 100.0, "daily_usage": 80.0},
+    {"name": "Bun", "category": "Pantry", "quantity": 80.0, "unit": "count", "unit_cost": 0.30, "par_level": 40.0, "daily_usage": 35.0},
+    {"name": "Rice", "category": "Pantry", "quantity": 25.0, "unit": "lb", "unit_cost": 0.60, "par_level": 15.0, "daily_usage": 10.0},
+    {"name": "Black Beans", "category": "Pantry", "quantity": 15.0, "unit": "lb", "unit_cost": 0.90, "par_level": 10.0, "daily_usage": 6.0},
+    {"name": "Pinto Beans", "category": "Pantry", "quantity": 15.0, "unit": "lb", "unit_cost": 0.85, "par_level": 10.0, "daily_usage": 6.0},
+    {"name": "Chips", "category": "Pantry", "quantity": 24.0, "unit": "bag", "unit_cost": 2.50, "par_level": 12.0, "daily_usage": 10.0},
+    {"name": "Flour", "category": "Pantry", "quantity": 50.0, "unit": "lb", "unit_cost": 0.35, "par_level": 25.0, "daily_usage": 8.0},
+    {"name": "Potato", "category": "Produce", "quantity": 40.0, "unit": "lb", "unit_cost": 0.45, "par_level": 25.0, "daily_usage": 15.0},
+    {"name": "Chili Powder", "category": "Pantry", "quantity": 5.0, "unit": "lb", "unit_cost": 8.00, "par_level": 3.0, "daily_usage": 0.5},
+    # Condiments / Sauces
+    {"name": "Mayo", "category": "Condiments", "quantity": 6.0, "unit": "quart", "unit_cost": 5.00, "par_level": 4.0, "daily_usage": 2.0},
+    {"name": "Salsa", "category": "Condiments", "quantity": 12.0, "unit": "quart", "unit_cost": 4.00, "par_level": 8.0, "daily_usage": 6.0},
+    {"name": "Mole Sauce", "category": "Condiments", "quantity": 8.0, "unit": "quart", "unit_cost": 6.00, "par_level": 5.0, "daily_usage": 3.0},
+    {"name": "Hot Sauce", "category": "Condiments", "quantity": 24.0, "unit": "bottle", "unit_cost": 2.00, "par_level": 12.0, "daily_usage": 8.0},
+    # Spirits
     {"name": "Tequila", "category": "Spirits", "quantity": 12.0, "unit": "bottle", "unit_cost": 18.0, "par_level": 6.0, "daily_usage": 3.0},
+    {"name": "Triple Sec", "category": "Spirits", "quantity": 8.0, "unit": "bottle", "unit_cost": 12.0, "par_level": 4.0, "daily_usage": 2.0},
+    {"name": "Grapefruit Soda", "category": "Beverages", "quantity": 24.0, "unit": "bottle", "unit_cost": 1.50, "par_level": 12.0, "daily_usage": 8.0},
+    {"name": "Beer", "category": "Beverages", "quantity": 48.0, "unit": "case", "unit_cost": 28.0, "par_level": 24.0, "daily_usage": 18.0},
+    {"name": "Clamato", "category": "Beverages", "quantity": 12.0, "unit": "bottle", "unit_cost": 3.50, "par_level": 6.0, "daily_usage": 4.0},
 ]
 
 
