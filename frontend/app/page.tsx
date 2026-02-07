@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Database, Loader2 } from "lucide-react";
-import { fetchInventory, seedDatabase, type Ingredient } from "@/lib/api";
+import { Database, Loader2, Flame } from "lucide-react";
+import { fetchInventory, seedDatabase, simulateRush, type Ingredient } from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -17,10 +17,46 @@ function formatNum(n: number) {
   return Number.isInteger(n) ? n : n.toFixed(2);
 }
 
+/**
+ * Traffic light: returns Tailwind classes for the row based on quantity vs par_level.
+ * 🔴 CRITICAL: quantity < par_level
+ * 🟡 WARNING: quantity >= par_level AND quantity < par_level * 1.5
+ * 🟢 HEALTHY: otherwise
+ */
+function getStatusColor(item: Ingredient): string {
+  const { quantity, par_level } = item;
+  if (quantity < par_level) {
+    return "bg-red-50 hover:bg-red-100 border-l-4 border-l-red-500";
+  }
+  if (quantity < par_level * 1.5) {
+    return "bg-yellow-50 hover:bg-yellow-100 border-l-4 border-l-yellow-500";
+  }
+  return "bg-white hover:bg-slate-50 border-l-4 border-l-green-500";
+}
+
+/**
+ * Days on hand: quantity / daily_usage. If daily_usage is 0, returns Infinity (display as "∞").
+ */
+function getDaysOnHand(item: Ingredient): number | null {
+  if (item.daily_usage === 0) return null;
+  return item.quantity / item.daily_usage;
+}
+
+function formatDaysOnHand(item: Ingredient): { text: string; isLow: boolean } {
+  const doh = getDaysOnHand(item);
+  if (doh === null) return { text: "∞", isLow: false };
+  const rounded = Math.round(doh * 10) / 10;
+  return {
+    text: `${rounded} Days`,
+    isLow: rounded < 2.0,
+  };
+}
+
 export default function Home() {
   const [inventory, setInventory] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [simulating, setSimulating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -53,6 +89,19 @@ export default function Home() {
     }
   };
 
+  const handleSimulateRush = async () => {
+    setSimulating(true);
+    setError(null);
+    try {
+      await simulateRush();
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to simulate rush");
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   return (
     <main className="max-w-5xl mx-auto p-6 md:p-10">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -62,22 +111,40 @@ export default function Home() {
             Inventory — Tex-Mex
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleSeed}
-          disabled={seeding || loading}
-          className={cn(
-            "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
-            "bg-zinc-900 text-white hover:bg-zinc-800"
-          )}
-        >
-          {seeding ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Database className="h-4 w-4" />
-          )}
-          {seeding ? "Seeding…" : "Seed data"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSimulateRush}
+            disabled={simulating || loading}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium shadow disabled:opacity-50 disabled:pointer-events-none",
+              "bg-amber-500 text-white hover:bg-amber-600"
+            )}
+          >
+            {simulating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Flame className="h-4 w-4" />
+            )}
+            {simulating ? "Simulating…" : "🔥 Simulate Rush"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSeed}
+            disabled={seeding || loading}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none",
+              "bg-zinc-900 text-white hover:bg-zinc-800"
+            )}
+          >
+            {seeding ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Database className="h-4 w-4" />
+            )}
+            {seeding ? "Seeding…" : "Seed data"}
+          </button>
+        </div>
       </header>
 
       {error && (
@@ -112,32 +179,37 @@ export default function Home() {
                 <TableHead className="text-foreground font-medium text-right">
                   Quantity
                 </TableHead>
-                <TableHead className="text-foreground font-medium">Unit</TableHead>
                 <TableHead className="text-foreground font-medium text-right">
-                  Unit cost
-                </TableHead>
-                <TableHead className="text-foreground font-medium text-right">
-                  Par level
+                  Days On Hand
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {inventory.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell>{row.category}</TableCell>
-                  <TableCell className="text-right">
-                    {formatNum(row.quantity)}
-                  </TableCell>
-                  <TableCell>{row.unit}</TableCell>
-                  <TableCell className="text-right">
-                    ${formatNum(row.unit_cost)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatNum(row.par_level)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {inventory.map((row) => {
+                const doh = formatDaysOnHand(row);
+                return (
+                  <TableRow
+                    key={row.id}
+                    className={cn("border-border", getStatusColor(row))}
+                  >
+                    <TableCell className="font-medium">{row.name}</TableCell>
+                    <TableCell>{row.category}</TableCell>
+                    <TableCell className="text-right">
+                      {formatNum(row.quantity)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex items-center gap-2">
+                        {doh.text}
+                        {doh.isLow && (
+                          <span className="text-xs font-medium text-red-600">
+                            LOW STOCK
+                          </span>
+                        )}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

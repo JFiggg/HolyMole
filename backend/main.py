@@ -19,14 +19,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # ----- Seed data for Tex-Mex ingredients -----
 SEED_INGREDIENTS = [
-    {"name": "Avocados", "category": "Produce", "quantity": 100.0, "unit": "count", "unit_cost": 0.85, "par_level": 50.0},
-    {"name": "Steak", "category": "Protein", "quantity": 40.0, "unit": "lb", "unit_cost": 8.50, "par_level": 25.0},
-    {"name": "Eggs", "category": "Dairy", "quantity": 120.0, "unit": "count", "unit_cost": 0.25, "par_level": 60.0},
-    {"name": "Lime", "category": "Produce", "quantity": 80.0, "unit": "count", "unit_cost": 0.20, "par_level": 40.0},
-    {"name": "Tequila", "category": "Spirits", "quantity": 12.0, "unit": "bottle", "unit_cost": 18.0, "par_level": 6.0},
+    {"name": "Avocados", "category": "Produce", "quantity": 100.0, "unit": "count", "unit_cost": 0.85, "par_level": 50.0, "daily_usage": 30.0},
+    {"name": "Steak", "category": "Protein", "quantity": 40.0, "unit": "lb", "unit_cost": 8.50, "par_level": 25.0, "daily_usage": 15.0},
+    {"name": "Eggs", "category": "Dairy", "quantity": 120.0, "unit": "count", "unit_cost": 0.25, "par_level": 60.0, "daily_usage": 48.0},
+    {"name": "Lime", "category": "Produce", "quantity": 80.0, "unit": "count", "unit_cost": 0.20, "par_level": 40.0, "daily_usage": 35.0},
+    {"name": "Tequila", "category": "Spirits", "quantity": 12.0, "unit": "bottle", "unit_cost": 18.0, "par_level": 6.0, "daily_usage": 3.0},
 ]
 
 
@@ -46,8 +45,8 @@ def get_inventory(db: Session = Depends(get_db)):
             "category": i.category,
             "quantity": i.quantity,
             "unit": i.unit,
-            "unit_cost": i.unit_cost,
             "par_level": i.par_level,
+            "daily_usage": i.daily_usage,
         }
         for i in ingredients
     ]
