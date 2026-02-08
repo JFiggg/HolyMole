@@ -109,6 +109,11 @@ export default function Home() {
     }
   };
 
+  const handleRestockSuccess = async () => {
+    // Refresh inventory after successful restock
+    await load();
+  };
+
   return (
     <main className="max-w-5xl mx-auto p-6 md:p-10">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -240,6 +245,7 @@ export default function Home() {
           setBlastRadiusOpen(false);
           setBlastRadiusIngredient(null);
         }}
+        onRestockSuccess={handleRestockSuccess}
       />
     </main>
   );

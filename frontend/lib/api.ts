@@ -50,3 +50,21 @@ export async function fetchBlastRadius(ingredientName: string): Promise<BlastRad
   if (!res.ok) throw new Error("Failed to fetch blast radius");
   return res.json();
 }
+
+export interface RestockResponse {
+  status: string;
+  message: string;
+  ingredient: string;
+  old_quantity: number;
+  new_quantity: number;
+  quantity_added: number;
+  unit: string;
+  unit_cost: number;
+  total_cost: number;
+}
+
+export async function restockIngredient(ingredientName: string): Promise<RestockResponse> {
+  const res = await fetch(`${API_BASE}/restock/${encodeURIComponent(ingredientName)}`, { method: "POST" });
+  if (!res.ok) throw new Error("Failed to restock ingredient");
+  return res.json();
+}

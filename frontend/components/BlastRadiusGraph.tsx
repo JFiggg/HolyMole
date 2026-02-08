@@ -12,8 +12,8 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Loader2, X } from "lucide-react";
-import { fetchBlastRadius, type BlastRadiusResponse } from "@/lib/api";
+import { Loader2, X, Package } from "lucide-react";
+import { fetchBlastRadius, restockIngredient, type BlastRadiusResponse } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const NODE_WIDTH = 140;
@@ -83,10 +83,16 @@ function layoutNodesAndEdges(data: BlastRadiusResponse): { nodes: Node[]; edges:
   return { nodes, edges };
 }
 
-function BlastRadiusGraphInner({ ingredientName }: { ingredientName: string }) {
+function BlastRadiusGraphInner({ ingredientName, onRestockSuccess }: { ingredientName: string; onRestockSuccess?: () => void }) {
   const [data, setData] = useState<BlastRadiusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [restocking, setRestocking] = useState(false);
+  const [restockInfo, setRestockInfo] = useState<{
+    quantityToAdd: number;
+    cost: number;
+    unit: string;
+  } | null>(null);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
     if (!data) return { nodes: [], edges: [] };
@@ -100,6 +106,7 @@ function BlastRadiusGraphInner({ ingredientName }: { ingredientName: string }) {
     setData(null);
     setError(null);
     setLoading(true);
+    setRestockInfo(null);
     fetchBlastRadius(ingredientName)
       .then(setData)
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
@@ -110,6 +117,26 @@ function BlastRadiusGraphInner({ ingredientName }: { ingredientName: string }) {
     setNodes(initialNodes);
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
+
+  const handleRestock = async () => {
+    setRestocking(true);
+    setError(null);
+    try {
+      const result = await restockIngredient(ingredientName);
+      setRestockInfo({
+        quantityToAdd: result.quantity_added,
+        cost: result.total_cost,
+        unit: result.unit,
+      });
+      if (onRestockSuccess) {
+        onRestockSuccess();
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to restock");
+    } finally {
+      setRestocking(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -144,10 +171,38 @@ function BlastRadiusGraphInner({ ingredientName }: { ingredientName: string }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {restockInfo && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+          <p className="text-sm font-medium text-green-800">
+            ✓ Restocked successfully!
+          </p>
+          <p className="mt-1 text-sm text-green-700">
+            Added {restockInfo.quantityToAdd.toFixed(2)} {restockInfo.unit} • Cost: ${restockInfo.cost.toFixed(2)}
+          </p>
+        </div>
+      )}
       <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-        <p className="text-sm font-medium text-foreground">
-          <span className="font-semibold text-red-600">{pct}%</span> of the menu relies on it
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-foreground">
+            <span className="font-semibold text-red-600">{pct}%</span> of the menu relies on it
+          </p>
+          <button
+            type="button"
+            onClick={handleRestock}
+            disabled={restocking}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium shadow disabled:opacity-50 disabled:pointer-events-none",
+              "bg-green-600 text-white hover:bg-green-700"
+            )}
+          >
+            {restocking ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Package className="h-4 w-4" />
+            )}
+            {restocking ? "Restocking…" : "Restock"}
+          </button>
+        </div>
         <ul className="mt-3 list-none space-y-1.5 border-t border-border pt-3">
           {list.map(({ menu_item, revenue_per_hour }) => (
             <li
@@ -191,10 +246,12 @@ export function BlastRadiusGraphModal({
   ingredientName,
   open,
   onClose,
+  onRestockSuccess,
 }: {
   ingredientName: string | null;
   open: boolean;
   onClose: () => void;
+  onRestockSuccess?: () => void;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -232,7 +289,7 @@ export function BlastRadiusGraphModal({
         <div className="overflow-auto p-4">
           {ingredientName ? (
             <ReactFlowProvider>
-              <BlastRadiusGraphInner ingredientName={ingredientName} />
+              <BlastRadiusGraphInner ingredientName={ingredientName} onRestockSuccess={onRestockSuccess} />
             </ReactFlowProvider>
           ) : (
             <p className="text-sm text-muted-foreground">Select an ingredient.</p>

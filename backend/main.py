@@ -82,8 +82,20 @@ def startup():
 
 @app.get("/inventory")
 def get_inventory(db: Session = Depends(get_db)):
-    """Return all ingredients from the database."""
+    """Return all ingredients from the database, sorted with out-of-stock items first."""
     ingredients = db.query(Ingredient).all()
+    
+    # Sort: critical items (below par) first, then by days on hand
+    def sort_key(i):
+        is_critical = i.quantity < i.par_level
+        days_on_hand = i.quantity / i.daily_usage if i.daily_usage > 0 else 999.0
+        return (
+            not is_critical,  # False (critical) comes before True (non-critical)
+            days_on_hand,     # Lower days on hand first
+        )
+    
+    sorted_ingredients = sorted(ingredients, key=sort_key)
+    
     return [
         {
             "id": i.id,
@@ -94,7 +106,7 @@ def get_inventory(db: Session = Depends(get_db)):
             "par_level": i.par_level,
             "daily_usage": i.daily_usage,
         }
-        for i in ingredients
+        for i in sorted_ingredients
     ]
 
 
@@ -134,4 +146,38 @@ def simulate_rush(db: Session = Depends(get_db)):
         "status": "ok",
         "message": "Rush simulated.",
         "updated": [{"name": i.name, "quantity": i.quantity} for i in chosen],
+    }
+
+
+@app.post("/restock/{ingredient_name:path}")
+def restock_ingredient(ingredient_name: str, db: Session = Depends(get_db)):
+    """Restock a specific ingredient to 2x its par level."""
+    # Find the ingredient by name (case-insensitive)
+    ingredient = db.query(Ingredient).filter(
+        Ingredient.name.ilike(ingredient_name)
+    ).first()
+    
+    if not ingredient:
+        return {"status": "error", "message": f"Ingredient '{ingredient_name}' not found."}, 404
+    
+    # Calculate restock details
+    old_quantity = ingredient.quantity
+    new_quantity = ingredient.par_level * 2
+    quantity_added = new_quantity - old_quantity
+    total_cost = quantity_added * ingredient.unit_cost
+    
+    # Update the quantity
+    ingredient.quantity = round(new_quantity, 2)
+    db.commit()
+    
+    return {
+        "status": "ok",
+        "message": f"Successfully restocked {ingredient.name}.",
+        "ingredient": ingredient.name,
+        "old_quantity": round(old_quantity, 2),
+        "new_quantity": round(new_quantity, 2),
+        "quantity_added": round(quantity_added, 2),
+        "unit": ingredient.unit,
+        "unit_cost": ingredient.unit_cost,
+        "total_cost": round(total_cost, 2),
     }
